@@ -1,9 +1,154 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Script from "next/script";
+
+// 语言类型定义
+type Language = "zh" | "en";
+
+// 多语言文本
+const translations = {
+  zh: {
+    title: "电池材料计算器",
+    cathode: "正极计算",
+    anode: "负极计算",
+    cathodeCalculation: "正极材料计算",
+    anodeCalculation: "负极材料计算",
+    totalMass: "极片总质量 (mg)",
+    aluminumFoilMass: "铝箔质量 (mg)",
+    copperFoilMass: "铜箔质量 (mg)",
+    activeMaterialRatio: "活性物质比例",
+    conductiveAgentRatio: "导电剂比例",
+    binderRatio: "粘结剂比例",
+    default: "默认",
+    reset: "重置",
+    currentDefaults: "当前默认值设置：",
+    tip: "提示：留空输入框将使用上述默认值进行计算",
+    results: "计算结果",
+    coatingMass: "涂敷质量",
+    activeMaterialMass: "活性物质质量",
+    conductiveAgentMass: "导电剂质量",
+    binderMass: "粘结剂质量",
+    calculationNotes: "计算说明：",
+    note1: "• 涂敷质量 = 极片总质量 - 铝箔质量",
+    note2: "• 总比例 = 活性物质比例 + 导电剂比例 + 粘结剂比例",
+    note3: "• 活性物质质量 = 涂敷质量 × (活性物质比例 ÷ 总比例)",
+    note4: "• 导电剂质量 = 涂敷质量 × (导电剂比例 ÷ 总比例)",
+    note5: "• 粘结剂质量 = 涂敷质量 × (粘结剂比例 ÷ 总比例)",
+    note1Anode: "• 涂敷质量 = 极片总质量 - 铜箔质量",
+    placeholder: "请输入极片总质量"
+  },
+  en: {
+    title: "Battery Material Calculator",
+    cathode: "Cathode",
+    anode: "Anode",
+    cathodeCalculation: "Cathode Material Calculation",
+    anodeCalculation: "Anode Material Calculation",
+    totalMass: "Total Electrode Mass (mg)",
+    aluminumFoilMass: "Aluminum Foil Mass (mg)",
+    copperFoilMass: "Copper Foil Mass (mg)",
+    activeMaterialRatio: "Active Material Ratio",
+    conductiveAgentRatio: "Conductive Agent Ratio",
+    binderRatio: "Binder Ratio",
+    default: "Default",
+    reset: "Reset",
+    currentDefaults: "Current Default Values:",
+    tip: "Tip: Leave input fields empty to use default values for calculation",
+    results: "Calculation Results",
+    coatingMass: "Coating Mass",
+    activeMaterialMass: "Active Material Mass",
+    conductiveAgentMass: "Conductive Agent Mass",
+    binderMass: "Binder Mass",
+    calculationNotes: "Calculation Notes:",
+    note1: "• Coating Mass = Total Electrode Mass - Aluminum Foil Mass",
+    note2: "• Total Ratio = Active Material Ratio + Conductive Agent Ratio + Binder Ratio",
+    note3: "• Active Material Mass = Coating Mass × (Active Material Ratio ÷ Total Ratio)",
+    note4: "• Conductive Agent Mass = Coating Mass × (Conductive Agent Ratio ÷ Total Ratio)",
+    note5: "• Binder Mass = Coating Mass × (Binder Ratio ÷ Total Ratio)",
+    note1Anode: "• Coating Mass = Total Electrode Mass - Copper Foil Mass",
+    placeholder: "Enter total electrode mass"
+  }
+};
+
+// 语言切换组件
+const LanguageSwitcher = ({ currentLang, onLanguageChange }: { 
+  currentLang: Language; 
+  onLanguageChange: (lang: Language) => void; 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        title="Switch Language"
+      >
+        <svg
+          className="w-5 h-5 text-gray-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span className="text-sm font-medium text-gray-700">
+          {currentLang === "zh" ? "中文" : "EN"}
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+          <button
+            onClick={() => {
+              onLanguageChange("zh");
+              setIsOpen(false);
+            }}
+            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+              currentLang === "zh" ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-700"
+            }`}
+          >
+            中文
+          </button>
+          <button
+            onClick={() => {
+              onLanguageChange("en");
+              setIsOpen(false);
+            }}
+            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+              currentLang === "en" ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-700"
+            }`}
+          >
+            English
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"cathode" | "anode">("cathode");
+  const [language, setLanguage] = useState<Language>("zh");
+  const t = translations[language];
   
   const [cathodeData, setCathodeData] = useState({
     totalMass: "",
@@ -235,10 +380,41 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
-          电池材料计算器
-        </h1>
+      {/* Google AdSense Script */}
+      <Script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1525530800359816"
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+      />
+      
+      <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 gap-6">
+        {/* 左侧广告 */}
+        <div className="hidden lg:block lg:w-48 xl:w-64">
+          <div className="sticky top-4">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block', width: '160px', height: '600px' }}
+              data-ad-client="ca-pub-1525530800359816"
+              data-ad-slot="1234567890"
+              data-ad-format="vertical"
+              data-full-width-responsive="false"
+            ></ins>
+          </div>
+        </div>
+        
+        {/* 主要内容 */}
+        <div className="flex-1 max-w-4xl">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left text-gray-900 flex-1">
+                {t.title}
+              </h1>
+              <div className="flex justify-center sm:justify-end">
+                <LanguageSwitcher currentLang={language} onLanguageChange={setLanguage} />
+              </div>
+            </div>
+          </div>
         
         {/* 切换按钮 */}
         <div className="flex justify-center mb-6 sm:mb-8">
@@ -251,7 +427,7 @@ export default function Home() {
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              正极计算
+              {t.cathode}
             </button>
             <button
               onClick={() => setActiveTab("anode")}
@@ -261,7 +437,7 @@ export default function Home() {
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              负极计算
+              {t.anode}
             </button>
           </div>
         </div>
@@ -270,28 +446,28 @@ export default function Home() {
         {activeTab === "cathode" && (
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
-              正极材料计算
+              {t.cathodeCalculation}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  极片总质量 (mg)
+                  {t.totalMass}
                 </label>
                 <input
                   type="number"
                   value={cathodeData.totalMass}
                   onChange={(e) => handleCathodeInputChange("totalMass", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  placeholder="请输入极片总质量"
+                  placeholder={t.placeholder}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  铝箔质量 (mg)
+                  {t.aluminumFoilMass}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {CATHODE_DEFAULT_VALUES.aluminumFoilMass} mg
+                    {t.default}: {CATHODE_DEFAULT_VALUES.aluminumFoilMass} mg
                   </span>
                 </label>
                 <input
@@ -299,15 +475,15 @@ export default function Home() {
                   value={cathodeData.aluminumFoilMass}
                   onChange={(e) => handleCathodeInputChange("aluminumFoilMass", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  placeholder={`默认: ${CATHODE_DEFAULT_VALUES.aluminumFoilMass} mg`}
+                  placeholder={`${t.default}: ${CATHODE_DEFAULT_VALUES.aluminumFoilMass} mg`}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活性物质比例
+                  {t.activeMaterialRatio}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {CATHODE_DEFAULT_VALUES.activeMaterialRatio}
+                    {t.default}: {CATHODE_DEFAULT_VALUES.activeMaterialRatio}
                   </span>
                 </label>
                 <input
@@ -315,15 +491,15 @@ export default function Home() {
                   value={cathodeData.activeMaterialRatio}
                   onChange={(e) => handleCathodeInputChange("activeMaterialRatio", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  placeholder={`默认: ${CATHODE_DEFAULT_VALUES.activeMaterialRatio}`}
+                  placeholder={`${t.default}: ${CATHODE_DEFAULT_VALUES.activeMaterialRatio}`}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  导电剂比例
+                  {t.conductiveAgentRatio}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {CATHODE_DEFAULT_VALUES.conductiveAgentRatio}
+                    {t.default}: {CATHODE_DEFAULT_VALUES.conductiveAgentRatio}
                   </span>
                 </label>
                 <input
@@ -331,15 +507,15 @@ export default function Home() {
                   value={cathodeData.conductiveAgentRatio}
                   onChange={(e) => handleCathodeInputChange("conductiveAgentRatio", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  placeholder={`默认: ${CATHODE_DEFAULT_VALUES.conductiveAgentRatio}`}
+                  placeholder={`${t.default}: ${CATHODE_DEFAULT_VALUES.conductiveAgentRatio}`}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  粘结剂比例
+                  {t.binderRatio}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {CATHODE_DEFAULT_VALUES.binderRatio}
+                    {t.default}: {CATHODE_DEFAULT_VALUES.binderRatio}
                   </span>
                 </label>
                 <input
@@ -347,7 +523,7 @@ export default function Home() {
                   value={cathodeData.binderRatio}
                   onChange={(e) => handleCathodeInputChange("binderRatio", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  placeholder={`默认: ${CATHODE_DEFAULT_VALUES.binderRatio}`}
+                  placeholder={`${t.default}: ${CATHODE_DEFAULT_VALUES.binderRatio}`}
                 />
               </div>
             </div>
@@ -357,20 +533,20 @@ export default function Home() {
                 onClick={resetForm}
                 className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
-                重置
+                {t.reset}
               </button>
             </div>
             
             <div className="mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-medium text-blue-900 mb-2 text-sm sm:text-base">当前默认值设置：</h3>
+              <h3 className="font-medium text-blue-900 mb-2 text-sm sm:text-base">{t.currentDefaults}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-blue-800">
-                <div>• 铝箔质量: {CATHODE_DEFAULT_VALUES.aluminumFoilMass} mg</div>
-                <div>• 活性物质比例: {CATHODE_DEFAULT_VALUES.activeMaterialRatio}</div>
-                <div>• 导电剂比例: {CATHODE_DEFAULT_VALUES.conductiveAgentRatio}</div>
-                <div>• 粘结剂比例: {CATHODE_DEFAULT_VALUES.binderRatio}</div>
+                <div>• {t.aluminumFoilMass}: {CATHODE_DEFAULT_VALUES.aluminumFoilMass} mg</div>
+                <div>• {t.activeMaterialRatio}: {CATHODE_DEFAULT_VALUES.activeMaterialRatio}</div>
+                <div>• {t.conductiveAgentRatio}: {CATHODE_DEFAULT_VALUES.conductiveAgentRatio}</div>
+                <div>• {t.binderRatio}: {CATHODE_DEFAULT_VALUES.binderRatio}</div>
               </div>
               <p className="text-xs text-blue-600 mt-2">
-                提示：留空输入框将使用上述默认值进行计算
+                {t.tip}
               </p>
             </div>
           </div>
@@ -380,28 +556,28 @@ export default function Home() {
         {activeTab === "anode" && (
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
-              负极材料计算
+              {t.anodeCalculation}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  极片总质量 (mg)
+                  {t.totalMass}
                 </label>
                 <input
                   type="number"
                   value={anodeData.totalMass}
                   onChange={(e) => handleAnodeInputChange("totalMass", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
-                  placeholder="请输入极片总质量"
+                  placeholder={t.placeholder}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  铜箔质量 (mg)
+                  {t.copperFoilMass}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {ANODE_DEFAULT_VALUES.copperFoilMass} mg
+                    {t.default}: {ANODE_DEFAULT_VALUES.copperFoilMass} mg
                   </span>
                 </label>
                 <input
@@ -409,15 +585,15 @@ export default function Home() {
                   value={anodeData.copperFoilMass}
                   onChange={(e) => handleAnodeInputChange("copperFoilMass", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
-                  placeholder={`默认: ${ANODE_DEFAULT_VALUES.copperFoilMass} mg`}
+                  placeholder={`${t.default}: ${ANODE_DEFAULT_VALUES.copperFoilMass} mg`}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活性物质比例
+                  {t.activeMaterialRatio}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {ANODE_DEFAULT_VALUES.activeMaterialRatio}
+                    {t.default}: {ANODE_DEFAULT_VALUES.activeMaterialRatio}
                   </span>
                 </label>
                 <input
@@ -425,15 +601,15 @@ export default function Home() {
                   value={anodeData.activeMaterialRatio}
                   onChange={(e) => handleAnodeInputChange("activeMaterialRatio", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
-                  placeholder={`默认: ${ANODE_DEFAULT_VALUES.activeMaterialRatio}`}
+                  placeholder={`${t.default}: ${ANODE_DEFAULT_VALUES.activeMaterialRatio}`}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  导电剂比例
+                  {t.conductiveAgentRatio}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {ANODE_DEFAULT_VALUES.conductiveAgentRatio}
+                    {t.default}: {ANODE_DEFAULT_VALUES.conductiveAgentRatio}
                   </span>
                 </label>
                 <input
@@ -441,15 +617,15 @@ export default function Home() {
                   value={anodeData.conductiveAgentRatio}
                   onChange={(e) => handleAnodeInputChange("conductiveAgentRatio", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
-                  placeholder={`默认: ${ANODE_DEFAULT_VALUES.conductiveAgentRatio}`}
+                  placeholder={`${t.default}: ${ANODE_DEFAULT_VALUES.conductiveAgentRatio}`}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  粘结剂比例
+                  {t.binderRatio}
                   <span className="text-gray-500 text-xs ml-1 sm:ml-2 block sm:inline">
-                    默认: {ANODE_DEFAULT_VALUES.binderRatio}
+                    {t.default}: {ANODE_DEFAULT_VALUES.binderRatio}
                   </span>
                 </label>
                 <input
@@ -457,7 +633,7 @@ export default function Home() {
                   value={anodeData.binderRatio}
                   onChange={(e) => handleAnodeInputChange("binderRatio", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
-                  placeholder={`默认: ${ANODE_DEFAULT_VALUES.binderRatio}`}
+                  placeholder={`${t.default}: ${ANODE_DEFAULT_VALUES.binderRatio}`}
                 />
               </div>
             </div>
@@ -467,20 +643,20 @@ export default function Home() {
                 onClick={resetForm}
                 className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
-                重置
+                {t.reset}
               </button>
             </div>
             
             <div className="mt-4 p-3 sm:p-4 bg-green-50 rounded-lg">
-              <h3 className="font-medium text-green-900 mb-2 text-sm sm:text-base">当前默认值设置：</h3>
+              <h3 className="font-medium text-green-900 mb-2 text-sm sm:text-base">{t.currentDefaults}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-green-800">
-                <div>• 铜箔质量: {ANODE_DEFAULT_VALUES.copperFoilMass} mg</div>
-                <div>• 活性物质比例: {ANODE_DEFAULT_VALUES.activeMaterialRatio}</div>
-                <div>• 导电剂比例: {ANODE_DEFAULT_VALUES.conductiveAgentRatio}</div>
-                <div>• 粘结剂比例: {ANODE_DEFAULT_VALUES.binderRatio}</div>
+                <div>• {t.copperFoilMass}: {ANODE_DEFAULT_VALUES.copperFoilMass} mg</div>
+                <div>• {t.activeMaterialRatio}: {ANODE_DEFAULT_VALUES.activeMaterialRatio}</div>
+                <div>• {t.conductiveAgentRatio}: {ANODE_DEFAULT_VALUES.conductiveAgentRatio}</div>
+                <div>• {t.binderRatio}: {ANODE_DEFAULT_VALUES.binderRatio}</div>
               </div>
               <p className="text-xs text-green-600 mt-2">
-                提示：留空输入框将使用上述默认值进行计算
+                {t.tip}
               </p>
             </div>
           </div>
@@ -489,33 +665,33 @@ export default function Home() {
         {results.coatingMass !== null && (
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
-              计算结果
+              {t.results}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
-                <h3 className="font-medium text-blue-900 text-sm sm:text-base">涂敷质量</h3>
+                <h3 className="font-medium text-blue-900 text-sm sm:text-base">{t.coatingMass}</h3>
                 <p className="text-xl sm:text-2xl font-bold text-blue-700">
                   {results.coatingMass.toFixed(3)} mg
                 </p>
               </div>
               
               <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
-                <h3 className="font-medium text-green-900 text-sm sm:text-base">活性物质质量</h3>
+                <h3 className="font-medium text-green-900 text-sm sm:text-base">{t.activeMaterialMass}</h3>
                 <p className="text-xl sm:text-2xl font-bold text-green-700">
                   {results.activeMaterialMass!.toFixed(3)} mg
                 </p>
               </div>
               
               <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg">
-                <h3 className="font-medium text-yellow-900 text-sm sm:text-base">导电剂质量</h3>
+                <h3 className="font-medium text-yellow-900 text-sm sm:text-base">{t.conductiveAgentMass}</h3>
                 <p className="text-xl sm:text-2xl font-bold text-yellow-700">
                   {results.conductiveAgentMass!.toFixed(3)} mg
                 </p>
               </div>
               
               <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
-                <h3 className="font-medium text-purple-900 text-sm sm:text-base">粘结剂质量</h3>
+                <h3 className="font-medium text-purple-900 text-sm sm:text-base">{t.binderMass}</h3>
                 <p className="text-xl sm:text-2xl font-bold text-purple-700">
                   {results.binderMass!.toFixed(3)} mg
                 </p>
@@ -523,18 +699,45 @@ export default function Home() {
             </div>
             
             <div className="mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">计算说明：</h3>
+              <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">{t.calculationNotes}</h3>
               <ul className="text-xs sm:text-sm text-gray-700 space-y-1">
-                <li>• 涂敷质量 = 极片总质量 - {activeTab === "cathode" ? "铝箔质量" : "铜箔质量"}</li>
-                <li>• 总比例 = 活性物质比例 + 导电剂比例 + 粘结剂比例</li>
-                <li>• 活性物质质量 = 涂敷质量 × (活性物质比例 ÷ 总比例)</li>
-                <li>• 导电剂质量 = 涂敷质量 × (导电剂比例 ÷ 总比例)</li>
-                <li>• 粘结剂质量 = 涂敷质量 × (粘结剂比例 ÷ 总比例)</li>
+                <li>{activeTab === "cathode" ? t.note1 : t.note1Anode}</li>
+                <li>{t.note2}</li>
+                <li>{t.note3}</li>
+                <li>{t.note4}</li>
+                <li>{t.note5}</li>
               </ul>
             </div>
           </div>
         )}
+        </div>
+        
+        {/* 右侧广告 */}
+        <div className="hidden lg:block lg:w-48 xl:w-64">
+          <div className="sticky top-4">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block', width: '160px', height: '600px' }}
+              data-ad-client="ca-pub-1525530800359816"
+              data-ad-slot="0987654321"
+              data-ad-format="vertical"
+              data-full-width-responsive="false"
+            ></ins>
+          </div>
+        </div>
       </div>
+      
+      {/* 初始化广告的脚本 */}
+      <Script
+        id="ads-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            (adsbygoogle = window.adsbygoogle || []).push({});
+            (adsbygoogle = window.adsbygoogle || []).push({});
+          `,
+        }}
+      />
     </div>
   );
 }
